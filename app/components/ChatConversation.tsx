@@ -15,9 +15,19 @@ interface ChatConversationProps {
 
 export default function ChatConversation({ initialMessage, onClose }: ChatConversationProps) {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([{ role: 'user', content: initialMessage }]);
-  const [isLoading, setIsLoading] = useState(true); // Start with loading since we're sending the initial message
+  const [messages, setMessages] = useState<Message[]>(() => 
+    initialMessage ? [{ role: 'user', content: initialMessage }] : []
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const initialMessageSent = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Format content for display
+  const formatContent = (content: string): string => {
+    return content
+      .replace(/<[^>]*>/g, '')
+      .replace(/([a-z])([A-Z])/g, '$1 $2');
+  };
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -26,105 +36,70 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
     }
   }, [messages]);
 
-  // Send the initial message on component mount
+  // Send initial message only once
   useEffect(() => {
-    const sendInitialMessage = async () => {
-      try {
-        // Send request to our API endpoint
-        const response = await fetch('/api/chat', createChatCompletionRequest([{ role: 'user', content: initialMessage }]));
-        
-        if (!response.ok) {
-          throw new Error('Failed to get response');
-        }
-        
-        // Add initial empty assistant message
-        setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-        
-        // Process the stream
-        await processStreamResponse(
-          response,
-          // On each chunk, update the last message
-          (text) => {
-            setMessages(prev => {
-              const newMessages = [...prev];
-              const lastMessage = newMessages[newMessages.length - 1];
-              newMessages[newMessages.length - 1] = {
-                ...lastMessage,
-                content: lastMessage.content + text
-              };
-              return newMessages;
-            });
-          },
-          // On complete
-          () => {},
-          // On error
-          (error) => {
-            console.error('Stream error:', error);
-            setMessages(prev => [...prev, { 
-              role: 'assistant', 
-              content: 'Sorry, there was an error processing your request.' 
-            }]);
-          }
-        );
-      } catch (error) {
-        console.error('Error:', error);
-        // Add error message
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: 'Sorry, there was an error processing your request.' 
-        }]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    sendInitialMessage();
+    if (initialMessage && !initialMessageSent.current && messages.length === 1) {
+      initialMessageSent.current = true;
+      setIsLoading(true);
+      sendMessage(initialMessage, []);
+    }
   }, [initialMessage]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    
-    // Add user message to the chat
-    const userMessage: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
-    
-    // Clear input and set loading state
-    setInput('');
-    setIsLoading(true);
-    
+  const sendMessage = async (messageContent: string, existingMessages: Message[]) => {
     try {
-      // Prepare messages for API
-      const apiMessages = [...messages, userMessage];
+      // Check for duplicate messages
+      if (existingMessages.length > 0) {
+        const lastMessage = existingMessages[existingMessages.length - 1];
+        if (lastMessage.content === messageContent && lastMessage.role === 'user') {
+          console.log('Duplicate message detected, skipping');
+          return;
+        }
+      }
+
+      // Add user message to messages (skip if it's the initial message as it's already in state)
+      const updatedMessages = existingMessages.length === 0 ? 
+        [{ role: 'user' as const, content: messageContent }] : 
+        [...existingMessages];
       
-      // Send request to our API endpoint
-      const response = await fetch('/api/chat', createChatCompletionRequest(apiMessages));
+      console.log('Sending messages to API:', JSON.stringify(updatedMessages, null, 2));
+      
+      // Send request to API
+      const response = await fetch('/api/chat', createChatCompletionRequest(updatedMessages));
       
       if (!response.ok) {
         throw new Error('Failed to get response');
       }
       
       // Add initial empty assistant message
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+      console.log('Adding empty assistant message');
+      setMessages(prev => {
+        const newMessages = [...prev, { role: 'assistant' as const, content: '' }];
+        console.log('Current messages state:', JSON.stringify(newMessages, null, 2));
+        return newMessages;
+      });
       
       // Process the stream
       await processStreamResponse(
         response,
-        // On each chunk, update the last message
         (text) => {
+          console.log('Received chunk:', text);
           setMessages(prev => {
             const newMessages = [...prev];
             const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage.role !== 'assistant') {
+              console.log('Unexpected message role in stream processing');
+              return prev;
+            }
             newMessages[newMessages.length - 1] = {
-              ...lastMessage,
+              role: 'assistant',
               content: lastMessage.content + text
             };
             return newMessages;
           });
         },
-        // On complete
-        () => {},
-        // On error
+        () => {
+          console.log('Stream complete');
+        },
         (error) => {
           console.error('Stream error:', error);
           setMessages(prev => [...prev, { 
@@ -135,7 +110,6 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
       );
     } catch (error) {
       console.error('Error:', error);
-      // Add error message
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: 'Sorry, there was an error processing your request.' 
@@ -143,6 +117,15 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    
+    setInput('');
+    setIsLoading(true);
+    await sendMessage(input.trim(), messages);
   };
 
   return (
@@ -157,7 +140,7 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
                 : 'bg-gray-100 mr-auto max-w-[80%]'
             }`}
           >
-            {msg.content}
+            {formatContent(msg.content)}
           </div>
         ))}
         <div ref={messagesEndRef} />
