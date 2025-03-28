@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: 'GrandPrix GPT',
   description: 'Your F1 AI Assistant',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/icon.ico',
     apple: '/apple-touch-icon.png',
   },
 }
@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.ico" />
         <link rel="icon" href="/icon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
