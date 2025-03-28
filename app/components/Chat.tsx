@@ -29,9 +29,22 @@ export default function Chat({ onSubmit }: ChatProps) {
         />
         <button
           type="submit"
-          className="px-4 py-2 bg-transparent text-gray-800 rounded-full shadow-sm border border-gray-300 hover:shadow-md focus:outline-none"
+          className="w-10 h-10 flex items-center justify-center bg-transparent text-gray-500 rounded-full shadow-sm border border-gray-300 hover:shadow-md focus:outline-none"
+          aria-label="Send message"
         >
-          Send
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="16" 
+            height="16" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="M12 19V5M5 12l7-7 7 7"/>
+          </svg>
         </button>
       </form>
     </div>
