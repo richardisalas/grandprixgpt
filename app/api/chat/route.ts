@@ -2,6 +2,29 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { formatChatMessages } from '../../utils/apiUtils';
 
+ import { DataAPIClient } from "@datastax/astra-db-ts"
+
+// Environment variables
+const {
+  ASTRADB_DB_NAMESPACE,
+  ASTRADB_DB_COLLECTION,
+  ASTRA_DB_API_ENDPOINT,
+  ASTRA_DB_APPLICATION_TOKEN,
+} = process.env
+
+// 2. Initialize OpenAI client
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OPENAI_API_KEY environment variable not set.');
+}
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Initialize AstraDB client if credentials are available
+const client = ASTRA_DB_APPLICATION_TOKEN ? new DataAPIClient(ASTRA_DB_APPLICATION_TOKEN) : null
+const db = client && ASTRA_DB_API_ENDPOINT ? client.db(ASTRA_DB_API_ENDPOINT, { namespace: ASTRADB_DB_NAMESPACE || "default_keyspace" }) : null
+
 export async function POST(request: Request) {
   try {
     // 1. Parse the incoming request body to get the messages
@@ -17,15 +40,39 @@ export async function POST(request: Request) {
     const latestMessage = messages[messages.length - 1]?.content;
     console.log('Latest message:', latestMessage);
 
-    // 2. Initialize OpenAI client
-    if (!process.env.OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY environment variable not set.');
-      return NextResponse.json({ error: 'Server configuration error: Missing API key.' }, { status: 500 });
-    }
+    // Get context from vector database
+    let docContext = ""
+    try {
+        const embedding = await openai.embeddings.create({
+            model: "text-embedding-3-small",
+            input: latestMessage,
+            encoding_format: "float"
+        })
+        console.log("Created embeddings successfully");
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+        if (db && ASTRADB_DB_COLLECTION) {
+            const collection = await db.collection(ASTRADB_DB_COLLECTION)
+            const cursor = collection.find({}, {
+                sort: {
+                    $vector: embedding.data[0].embedding,
+                },
+                limit: 10
+            })  
+
+            const documents = await cursor.toArray()
+            console.log("Retrieved documents count:", documents?.length || 0)
+            console.log("Retrieved documents:", JSON.stringify(documents, null, 2))
+            
+            const docsMap = documents?.map(doc => doc.text)
+            console.log("Mapped document texts:", JSON.stringify(docsMap, null, 2))
+            docContext = JSON.stringify(docsMap)
+        } else {
+            console.warn("Database not initialized. Using empty context.")
+        }
+    } catch (error) {
+        console.error("Error querying database:", error)
+        docContext = ""
+    }
 
     // 3. Format messages for the OpenAI API
     const formattedMessages = formatChatMessages(messages);
