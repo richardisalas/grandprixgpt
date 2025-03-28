@@ -12,6 +12,11 @@ export const metadata: Metadata = {
     icon: '/icon.ico',
     apple: '/apple-touch-icon.png',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'GrandPrix GPT',
+  },
 }
 
 export default function RootLayout({
@@ -25,6 +30,8 @@ export default function RootLayout({
         <link rel="icon" href="/icon.ico" />
         <link rel="icon" href="/icon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="mask-icon" href="/icon.png" color="#000000" />
+        <link rel="shortcut icon" href={`/icon.ico?v=${Date.now()}`} />
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50`}>
         {children}
