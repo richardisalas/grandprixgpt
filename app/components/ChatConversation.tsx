@@ -134,13 +134,17 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
         {messages.map((msg, index) => (
           <div 
             key={index} 
-            className={`p-3 rounded-lg ${
-              msg.role === 'user' 
-                ? 'bg-blue-100 ml-auto max-w-[80%]' 
-                : 'bg-gray-100 mr-auto max-w-[80%]'
-            }`}
+            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            {formatContent(msg.content)}
+            <div 
+              className={`p-2 rounded-lg ${
+                msg.role === 'user' 
+                  ? 'bg-white/30 backdrop-blur-sm' 
+                  : 'bg-transparent'
+              }`}
+            >
+              {formatContent(msg.content)}
+            </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
@@ -152,12 +156,12 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
-          className="flex-grow px-4 py-2 rounded-full bg-transparent shadow-sm border border-gray-300 focus:outline-none focus:shadow-md"
+          className="flex-grow px-4 py-2 rounded-full bg-transparent backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.1)] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-transparent transition-shadow"
           disabled={isLoading}
         />
         <button
           type="submit"
-          className="w-10 h-10 flex items-center justify-center bg-transparent text-gray-500 rounded-full shadow-sm border border-gray-300 hover:shadow-md focus:outline-none disabled:opacity-50"
+          className="w-10 h-10 flex items-center justify-center bg-transparent backdrop-blur-sm text-gray-500 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] border border-gray-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] focus:outline-none disabled:opacity-50 transition-shadow"
           aria-label="Send message"
           disabled={isLoading}
         >
