@@ -9,11 +9,8 @@ export const metadata: Metadata = {
   title: 'GrandPrix GPT',
   description: 'Your F1 AI Assistant',
   icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon.png', type: 'image/png' }
-    ],
-    apple: { url: '/apple-touch-icon.png' },
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
 }
 
@@ -24,6 +21,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
       <body className={`${inter.className} min-h-screen bg-gray-50`}>
         {children}
       </body>
