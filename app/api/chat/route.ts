@@ -74,6 +74,29 @@ export async function POST(request: Request) {
         docContext = ""
     }
 
+    // add context to the messages
+    const template = {
+      role: "system",
+      content: `You are an AI assistant who knows everything about Formula 1. 
+      Use the below context to augment what you know about Formula One racing.
+      The context will provide you with the most recent page data from wikipedia,
+      the official F1 website and others.
+
+      If the context doesn't include the information you need to answer based on
+      your existing knowledge and don't mention the source of your information or 
+      what the context does or doesn't include.
+
+      Format responses using markdown where applicable and don't return images.
+      ----------
+      START CONTEXT
+      ${docContext}
+      END CONTEXT
+      ----------
+      QUESTION: ${latestMessage}
+      ----------
+      `
+  }
+
     // 3. Format messages for the OpenAI API
     const formattedMessages = formatChatMessages(messages);
     console.log('Formatted messages for OpenAI:', JSON.stringify(formattedMessages, null, 2));
@@ -82,7 +105,8 @@ export async function POST(request: Request) {
     const encoder = new TextEncoder();
     const stream = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages: formattedMessages,
+      // messages: formattedMessages,
+      messages: [template, ...messages],
       stream: true,
       temperature: 0.7,
     });
