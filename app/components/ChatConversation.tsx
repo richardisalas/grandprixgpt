@@ -199,30 +199,6 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
   return (
     <div className="w-full max-w-3xl mx-auto flex flex-col h-[600px]">
       <div className="flex-grow overflow-auto p-4 space-y-4">
-        {/* Back button */}
-        <div className="mb-4">
-          <button 
-            onClick={onClose}
-            className="flex items-center text-gray-500 hover:text-gray-700"
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="16" 
-              height="16" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-              className="mr-1"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            New Chat
-          </button>
-        </div>
-        
         {messages.map((msg, index) => (
           <div 
             key={index} 
