@@ -197,7 +197,7 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col h-[600px]">
+    <div className="w-full max-w-3xl mx-auto flex flex-col h-[85vh] md:h-[80vh]">
       <div className="flex-grow overflow-auto p-4 space-y-4">
         {messages.map((msg, index) => (
           <div 
@@ -215,16 +215,16 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
             </div>
           </div>
         ))}
-        <div ref={messagesEndRef} />
+        <div className="h-4" ref={messagesEndRef} />
       </div>
       
-      <form onSubmit={handleSubmit} className="p-4 border-t flex gap-2">
+      <form onSubmit={handleSubmit} className="p-4 pt-5 mt-auto border-t flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
-          className="flex-grow px-4 py-2 rounded-full bg-transparent backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.1)] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-transparent transition-shadow"
+          className="flex-grow px-4 py-3 rounded-full bg-transparent backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.1)] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-transparent transition-shadow"
           disabled={isLoading}
         />
         <button
