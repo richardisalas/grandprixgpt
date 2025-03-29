@@ -15,9 +15,10 @@ interface ChatConversationProps {
 
 export default function ChatConversation({ initialMessage, onClose }: ChatConversationProps) {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>(() => 
-    initialMessage ? [{ role: 'user', content: initialMessage }] : []
-  );
+  // Initialize with the initial message as the first user message
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'user', content: initialMessage }
+  ]);
   const [isLoading, setIsLoading] = useState(false);
   const initialMessageSent = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -38,12 +39,73 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
 
   // Send initial message only once
   useEffect(() => {
-    if (initialMessage && !initialMessageSent.current && messages.length === 1) {
+    if (!initialMessageSent.current) {
       initialMessageSent.current = true;
       setIsLoading(true);
-      sendMessage(initialMessage, []);
+      
+      // Use the messages array that contains the initial message
+      const initialMessages = [{ role: 'user' as const, content: initialMessage }];
+      sendInitialMessage(initialMessages);
     }
   }, [initialMessage]);
+
+  const sendInitialMessage = async (initialMessages: Message[]) => {
+    try {
+      console.log('Sending initial message to API:', JSON.stringify(initialMessages, null, 2));
+      
+      // Send request to API with the initial message
+      const response = await fetch('/api/chat', createChatCompletionRequest(initialMessages));
+      
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+      
+      // Add initial empty assistant message
+      console.log('Adding empty assistant message');
+      setMessages(prev => {
+        return [...prev, { role: 'assistant' as const, content: '' }];
+      });
+      
+      // Process the stream
+      await processStreamResponse(
+        response,
+        (text) => {
+          console.log('Received chunk:', text);
+          setMessages(prev => {
+            const newMessages = [...prev];
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage.role !== 'assistant') {
+              console.log('Unexpected message role in stream processing');
+              return prev;
+            }
+            newMessages[newMessages.length - 1] = {
+              role: 'assistant',
+              content: lastMessage.content + text
+            };
+            return newMessages;
+          });
+        },
+        () => {
+          console.log('Stream complete');
+        },
+        (error) => {
+          console.error('Stream error:', error);
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: 'Sorry, there was an error processing your request.' 
+          }]);
+        }
+      );
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, there was an error processing your request.' 
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const sendMessage = async (messageContent: string, existingMessages: Message[]) => {
     try {
@@ -56,14 +118,13 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
         }
       }
 
-      // Add user message to messages (skip if it's the initial message as it's already in state)
-      const updatedMessages = existingMessages.length === 0 ? 
-        [{ role: 'user' as const, content: messageContent }] : 
-        [...existingMessages];
+      // First update UI with the new user message
+      const updatedMessages = [...existingMessages, { role: 'user' as const, content: messageContent }];
+      setMessages(updatedMessages);
       
       console.log('Sending messages to API:', JSON.stringify(updatedMessages, null, 2));
       
-      // Send request to API
+      // Send request to API with all messages
       const response = await fetch('/api/chat', createChatCompletionRequest(updatedMessages));
       
       if (!response.ok) {
@@ -131,6 +192,30 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
   return (
     <div className="w-full max-w-3xl mx-auto flex flex-col h-[600px]">
       <div className="flex-grow overflow-auto p-4 space-y-4">
+        {/* Back button */}
+        <div className="mb-4">
+          <button 
+            onClick={onClose}
+            className="flex items-center text-gray-500 hover:text-gray-700"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+              className="mr-1"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            New Chat
+          </button>
+        </div>
+        
         {messages.map((msg, index) => (
           <div 
             key={index} 

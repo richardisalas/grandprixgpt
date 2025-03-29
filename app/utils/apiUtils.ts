@@ -31,6 +31,13 @@ export const formatChatMessages = (messages: ChatMessage[]): OpenAIMessage[] => 
  * Creates a chat completion request
  */
 export const createChatCompletionRequest = (messages: ChatMessage[]) => {
+  // Safety check - ensure messages is at least an array with one message
+  if (!messages || messages.length === 0) {
+    console.error('No messages provided to createChatCompletionRequest');
+    // Provide a default fallback message
+    messages = [{ role: 'user', content: 'Hello' }];
+  }
+
   return {
     method: 'POST',
     headers: {
@@ -52,35 +59,33 @@ export const processStreamResponse = async (
   onError: (error: Error) => void
 ) => {
   try {
-    const reader = response.body?.getReader();
-    if (!reader) throw new Error('Response body is not readable');
+    if (!response.body) {
+      throw new Error('Response body is not readable');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
 
     console.log('Starting to process stream response');
-    let allChunks = ''; // Track all received chunks
 
     while (true) {
       const { done, value } = await reader.read();
+      
       if (done) {
-        console.log('Stream done. Complete text received:', allChunks);
+        console.log('Stream done');
+        onComplete();
         break;
       }
 
-      // Decode the chunk and sanitize it by removing any HTML tags
-      // and ensuring proper spacing between words
-      const rawText = new TextDecoder().decode(value);
-      console.log('Received raw chunk from stream:', rawText);
+      // Decode the chunk
+      const text = decoder.decode(value);
       
-      // Process the text to ensure it's clean and properly formatted
-      const cleanedText = rawText
-        .replace(/<[^>]*>/g, '') // Remove any HTML tags
-        .replace(/([a-z])([A-Z])/g, '$1 $2'); // Add space between words that got merged
-      
-      console.log('Cleaned chunk:', cleanedText);
-      allChunks += cleanedText;
-      
-      onChunk(cleanedText);
+      // Process the chunk if it contains content
+      if (text.trim()) {
+        console.log('Received chunk:', text);
+        onChunk(text);
+      }
     }
-    onComplete();
   } catch (error) {
     console.error('Error processing stream:', error);
     onError(error instanceof Error ? error : new Error('Unknown error'));

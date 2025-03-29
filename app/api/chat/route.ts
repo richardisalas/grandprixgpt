@@ -78,49 +78,45 @@ export async function POST(request: Request) {
     const formattedMessages = formatChatMessages(messages);
     console.log('Formatted messages for OpenAI:', JSON.stringify(formattedMessages, null, 2));
 
-    // 4. Call OpenAI and accumulate the response
-    let fullResponseText = "";
-    let chunkCount = 0;
+    // 4. Set up streaming response
+    const encoder = new TextEncoder();
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: formattedMessages,
+      stream: true,
+      temperature: 0.7,
+    });
 
-    try {
-      const stream = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: formattedMessages,
-        stream: true,
-        temperature: 0.7,
-      });
-
-      // Loop through the OpenAI stream chunks and accumulate the content
-      for await (const chunk of stream) {
-        const text = chunk.choices[0]?.delta?.content || "";
-        if (text) {
-          chunkCount++;
-          const sanitizedText = text
-            .replace(/<[^>]*>/g, '') // Remove HTML tags
-            .replace(/([a-z])([A-Z])/g, '$1 $2'); // Add space between camelCase
-          fullResponseText += sanitizedText;
+    // Create a ReadableStream to send the response in chunks
+    return new Response(
+      new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of stream) {
+              const text = chunk.choices[0]?.delta?.content || "";
+              if (text) {
+                const sanitizedText = text
+                  .replace(/<[^>]*>/g, '') // Remove HTML tags
+                  .replace(/([a-z])([A-Z])/g, '$1 $2'); // Add space between camelCase
+                
+                controller.enqueue(encoder.encode(sanitizedText));
+              }
+            }
+          } catch (error) {
+            console.error("Stream processing error:", error);
+            controller.error(error);
+          } finally {
+            controller.close();
+          }
         }
-      }
-
-      console.log(`Processed ${chunkCount} chunks from OpenAI`);
-      console.log("Final assembled response:", fullResponseText);
-
-      // 5. Return the complete response to the client
-      return new NextResponse(fullResponseText, {
-        status: 200,
+      }),
+      {
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
+          'Transfer-Encoding': 'chunked',
         },
-      });
-
-    } catch (err: any) {
-      console.error('OpenAI API or stream processing error:', err);
-      const errorMessage = err.response?.data?.error?.message || err.message || 'Error generating response';
-      return NextResponse.json(
-        { error: `OpenAI error: ${errorMessage}` },
-        { status: err.status || 500 }
-      );
-    }
+      }
+    );
 
   } catch (error: any) {
     console.error('Chat API endpoint general error:', error);

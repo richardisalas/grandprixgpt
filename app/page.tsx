@@ -6,9 +6,16 @@ import ChatConversation from './components/ChatConversation'
 
 export default function Home() {
   const [initialMessage, setInitialMessage] = useState<string | null>(null);
+  const [conversationKey, setConversationKey] = useState<string>('initial');
 
   const handleChatSubmit = (message: string) => {
     setInitialMessage(message);
+    // Generate a new key to force a fresh conversation component instance
+    setConversationKey(Date.now().toString());
+  };
+  
+  const handleConversationClose = () => {
+    setInitialMessage(null);
   };
 
   return (
@@ -20,7 +27,11 @@ export default function Home() {
       {initialMessage === null ? (
         <Chat onSubmit={handleChatSubmit} />
       ) : (
-        <ChatConversation initialMessage={initialMessage} />
+        <ChatConversation 
+          key={conversationKey}
+          initialMessage={initialMessage}
+          onClose={handleConversationClose} 
+        />
       )}
     </main>
   )
