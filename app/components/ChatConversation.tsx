@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { createChatCompletionRequest, processStreamResponse } from '../utils/apiUtils';
+import { formatStructuredText } from '../utils/formatUtils';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -24,10 +25,16 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Format content for display
-  const formatContent = (content: string): string => {
-    return content
-      .replace(/<[^>]*>/g, '')
-      .replace(/([a-z])([A-Z])/g, '$1 $2');
+  const formatContent = (content: string, role: 'user' | 'assistant'): React.ReactNode => {
+    if (role === 'user') {
+      return content
+        .replace(/<[^>]*>/g, '')
+        .replace(/([a-z])([A-Z])/g, '$1 $2');
+    } else {
+      // For assistant messages, use our structured formatting
+      const formattedHtml = formatStructuredText(content);
+      return <div dangerouslySetInnerHTML={{ __html: formattedHtml }} />;
+    }
   };
 
   // Scroll to bottom whenever messages change
@@ -222,13 +229,13 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div 
-              className={`p-2 rounded-lg ${
+              className={`p-3 rounded-lg max-w-[85%] ${
                 msg.role === 'user' 
                   ? 'bg-white/30 backdrop-blur-sm' 
-                  : 'bg-transparent'
+                  : 'bg-white/10 backdrop-blur-sm formatted-content'
               }`}
             >
-              {formatContent(msg.content)}
+              {formatContent(msg.content, msg.role)}
             </div>
           </div>
         ))}
