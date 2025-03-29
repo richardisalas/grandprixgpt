@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <main className="flex flex-col min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-indigo-100 p-4">
       <h1 
-        className={`text-5xl font-bold text-gray-800 mb-10 cursor-pointer px-8 py-2 rounded-full ${
+        className={`text-5xl md:text-5xl text-4xl whitespace-nowrap font-bold text-gray-800 mb-5 cursor-pointer px-8 py-2 rounded-full ${
           isHovering ? "bg-white/30 backdrop-blur-sm border border-gray-200 shadow-sm" : ""
         }`}
         onClick={handleConversationClose}
