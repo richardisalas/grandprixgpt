@@ -19,7 +19,7 @@ export default function Chat({ onSubmit }: ChatProps) {
 
   const suggestedQuestions = [
     "Who will win the next race?",
-    "What are the current driver standings?",
+    "Who are the top 3 drivers this season?",
     "Tell me about the Monaco Grand Prix",
     "Which team has the best car this season?"
   ];
