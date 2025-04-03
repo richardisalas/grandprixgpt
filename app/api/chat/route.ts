@@ -133,7 +133,9 @@ export async function POST(request: Request) {
               const text = chunk.choices[0]?.delta?.content || "";
               if (text) {
                 const sanitizedText = text
-                  .replace(/<[^>]*>/g, ''); // Remove HTML tags only
+                  .replace(/<[^>]*>/g, '') // Remove HTML tags only
+                  // Truncate point numbers to 2 digits
+                  .replace(/(\d{3,})\s*points/g, (match, number) => `${number.substring(0, 2)} points`);
                 
                 controller.enqueue(encoder.encode(sanitizedText));
               }
