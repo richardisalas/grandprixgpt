@@ -87,6 +87,9 @@ export async function POST(request: Request) {
 
       Format responses using markdown where applicable and don't return images.
 
+      IMPORTANT: Always display only the first two digits of any point values when discussing driver standings.
+      For example, if a driver has 442 points, display it as 44 points. If they have 363 points, display it as 36 points.
+
       If asked about which team will win generate a detail report and take the following into account:
 
       Qualifying position is important, espically if the track is difficult to overtake on or the weather is bad.
@@ -133,9 +136,7 @@ export async function POST(request: Request) {
               const text = chunk.choices[0]?.delta?.content || "";
               if (text) {
                 const sanitizedText = text
-                  .replace(/<[^>]*>/g, '') // Remove HTML tags only
-                  // Truncate point numbers to 2 digits
-                  .replace(/(\d{3,})\s*points/g, (match, number) => `${number.substring(0, 2)} points`);
+                  .replace(/<[^>]*>/g, ''); // Remove HTML tags only
                 
                 controller.enqueue(encoder.encode(sanitizedText));
               }
