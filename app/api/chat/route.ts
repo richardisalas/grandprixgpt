@@ -56,7 +56,7 @@ export async function POST(request: Request) {
                 sort: {
                     $vector: embedding.data[0].embedding,
                 },
-                limit: 10
+                limit: 20
             })  
 
             const documents = await cursor.toArray()
@@ -77,16 +77,28 @@ export async function POST(request: Request) {
     // add context to the messages
     const template = {
       role: "system",
-      content: `You are an AI assistant who knows everything about Formula 1. 
+      content: `You are an AI assistant who knows everything about Formula 1 and are able to predict race finishes based on the data provided. 
       Use the below context to augment what you know about Formula One racing.
-      The context will provide you with the most recent page data from wikipedia,
-      the official F1 website and others.
+      The context will provide you with the most recent F1 data.
 
       If the context doesn't include the information you need to answer based on
       your existing knowledge and don't mention the source of your information or 
       what the context does or doesn't include.
 
       Format responses using markdown where applicable and don't return images.
+
+      If asked about which team will win generate a detail report and take the following into account:
+
+      Qualifying position is important, espically if the track is difficult to overtake on or the weather is bad.
+
+      Car performance in 2025 and team performance in 2025 so far.
+      
+      Driver form and histroic results in the race matter too.
+
+      Relevant driver news, and team chemistry into account.
+
+      Output a conclusion with your reasoning and predicted podium finishes.
+
       ----------
       START CONTEXT
       ${docContext}
@@ -109,6 +121,7 @@ export async function POST(request: Request) {
       messages: [template, ...messages],
       stream: true,
       temperature: 0.7,
+      // reasoning_effort: "medium" 
     });
 
     // Create a ReadableStream to send the response in chunks
@@ -120,8 +133,7 @@ export async function POST(request: Request) {
               const text = chunk.choices[0]?.delta?.content || "";
               if (text) {
                 const sanitizedText = text
-                  .replace(/<[^>]*>/g, '') // Remove HTML tags
-                  .replace(/([a-z])([A-Z])/g, '$1 $2'); // Add space between camelCase
+                  .replace(/<[^>]*>/g, ''); // Remove HTML tags only
                 
                 controller.enqueue(encoder.encode(sanitizedText));
               }
@@ -136,7 +148,7 @@ export async function POST(request: Request) {
       }),
       {
         headers: {
-          'Content-Type': 'text/plain; charset=utf-8',
+          'Content-Type': 'text/markdown; charset=utf-8',
           'Transfer-Encoding': 'chunked',
         },
       }

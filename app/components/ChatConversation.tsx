@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createChatCompletionRequest, processStreamResponse } from '../utils/apiUtils';
 import { formatStructuredText } from '../utils/formatUtils';
+import ReactMarkdown from 'react-markdown';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -31,9 +32,10 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
         .replace(/<[^>]*>/g, '')
         .replace(/([a-z])([A-Z])/g, '$1 $2');
     } else {
-      // For assistant messages, use our structured formatting
-      const formattedHtml = formatStructuredText(content);
-      return <div dangerouslySetInnerHTML={{ __html: formattedHtml }} />;
+      // For assistant messages, use React Markdown
+      return <div className="prose prose-slate max-w-none">
+        <ReactMarkdown>{content}</ReactMarkdown>
+      </div>;
     }
   };
 
@@ -205,10 +207,10 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div 
-              className={`p-3 rounded-lg max-w-[85%] ${
+              className={`p-4 rounded-lg ${
                 msg.role === 'user' 
-                  ? 'bg-white/30 backdrop-blur-sm' 
-                  : 'bg-white/10 backdrop-blur-sm formatted-content'
+                  ? 'bg-transparent backdrop-blur-sm border border-gray-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] max-w-[85%]' 
+                  : 'bg-transparent backdrop-blur-sm border border-gray-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)] max-w-[90%] md:max-w-[85%]'
               }`}
             >
               {formatContent(msg.content, msg.role)}

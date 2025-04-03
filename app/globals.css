@@ -2,6 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Markdown Styles */
+.prose h1, .prose h2, .prose h3 {
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  font-weight: 700;
+}
+
+.prose h1 {
+  font-size: 1.8em;
+}
+
+.prose h2 {
+  font-size: 1.5em;
+}
+
+.prose h3 {
+  font-size: 1.2em;
+}
+
+.prose p {
+  margin-top: 0.5em;
+  margin-bottom: 0.75em;
+}
+
+.prose ul, .prose ol {
+  padding-left: 1.5em;
+  margin-top: 0.5em;
+  margin-bottom: 0.75em;
+}
+
 /* Formatted content styles */
 .formatted-content .entry {
   margin-bottom: 1rem;
