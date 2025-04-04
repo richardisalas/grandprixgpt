@@ -33,15 +33,23 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
         .replace(/<[^>]*>/g, '')
         .replace(/([a-z])([A-Z])/g, '$1 $2');
     } else {
-      // Remove leading spaces from each line before rendering markdown
-      const trimmedContent = content
+      // First normalize the text with several improvements
+      let normalizedContent = content
+        // Fix missing spaces between words and numbers
+        .replace(/([a-zA-Z])(\d)/g, '$1 $2')
+        .replace(/(\d)([a-zA-Z])/g, '$1 $2')
+        // Ensure proper space after hash symbols for markdown headings
+        .replace(/(#+)([a-zA-Z])/g, '$1 $2')
+        // Remove repeated hash symbols that might break markdown
+        .replace(/#{4,}/g, '###')
+        // Remove leading spaces from each line
         .split('\n')
         .map(line => line.trimStart())
         .join('\n');
         
       // For assistant messages, use React Markdown
-      return <div className="prose prose-slate max-w-none">
-        <ReactMarkdown>{trimmedContent}</ReactMarkdown>
+      return <div className="prose prose-slate max-w-none prose-headings:font-bold prose-h1:text-xl prose-h2:text-lg prose-h3:text-base">
+        <ReactMarkdown>{normalizedContent}</ReactMarkdown>
       </div>;
     }
   };
