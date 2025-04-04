@@ -22,6 +22,7 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
     { role: 'user', content: initialMessage }
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isWaitingForFirstToken, setIsWaitingForFirstToken] = useState(false);
   const initialMessageSent = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +63,7 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
     try {
       console.log('Sending initial message to API:', JSON.stringify(initialMessages, null, 2));
       
+      setIsWaitingForFirstToken(true);
       // Send request to API with the initial message
       const response = await fetch('/api/chat', createChatCompletionRequest(initialMessages));
       
@@ -80,6 +82,7 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
         response,
         (text) => {
           console.log('Received chunk:', text);
+          setIsWaitingForFirstToken(false); // Got first token
           setMessages(prev => {
             const newMessages = [...prev];
             const lastMessage = newMessages[newMessages.length - 1];
@@ -133,6 +136,7 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
       
       console.log('Sending messages to API:', JSON.stringify(updatedMessages, null, 2));
       
+      setIsWaitingForFirstToken(true);
       // Send request to API with all messages
       const response = await fetch('/api/chat', createChatCompletionRequest(updatedMessages));
       
@@ -153,6 +157,7 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
         response,
         (text) => {
           console.log('Received chunk:', text);
+          setIsWaitingForFirstToken(false); // Got first token
           setMessages(prev => {
             const newMessages = [...prev];
             const lastMessage = newMessages[newMessages.length - 1];
@@ -217,6 +222,19 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
             </div>
           </div>
         ))}
+        
+        {isWaitingForFirstToken && (
+          <div className="flex justify-start">
+            <div className="p-2 rounded-full bg-transparent backdrop-blur-sm border border-gray-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
+              <div className="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="h-4" ref={messagesEndRef} />
       </div>
       

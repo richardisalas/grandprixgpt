@@ -86,9 +86,14 @@ export async function POST(request: Request) {
       what the context does or doesn't include.
 
       Format responses using markdown where applicable and don't return images.
-
-      IMPORTANT: Always display only the first two digits of any point values when discussing driver standings.
-      For example, if a driver has 442 points, display it as 44 points. If they have 363 points, display it as 36 points.
+      
+      IMPORTANT FORMATTING RULES:
+      1. Always display only the first two digits of any point values when discussing driver standings.
+         For example, if a driver has 442 points, display it as 44 points. If they have 363 points, display it as 36 points.
+      2. Always include a space between words and numbers (e.g., "in 2025" not "in2025")
+      3. Use consistent bullet points formatting with proper spacing
+      4. Ensure all headers and sections are properly formatted with markdown
+      5. Check that all sentences are complete and not cut off
 
       If asked about which team will win generate a detail report and take the following into account:
 
