@@ -39,8 +39,10 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
         // Fix missing spaces between words and numbers
         .replace(/([a-zA-Z])(\d)/g, '$1 $2')
         .replace(/(\d)([a-zA-Z])/g, '$1 $2')
+        // Ensure headers have proper line breaks before them
+        .replace(/([^\n])(#+\s)/g, '$1\n\n$2')
         // Ensure proper space after hash symbols for markdown headings
-        .replace(/(#+)([a-zA-Z])/g, '$1 $2')
+        .replace(/(#+)([^\s])/g, '$1 $2')
         // Remove repeated hash symbols that might break markdown
         .replace(/#{4,}/g, '###')
         // Remove leading spaces from each line
