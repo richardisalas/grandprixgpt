@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createChatCompletionRequest, processStreamResponse } from '../utils/apiUtils';
 import { formatStructuredText } from '../utils/formatUtils';
 import ReactMarkdown from 'react-markdown';
+import { PulseLoader } from 'react-spinners';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -239,12 +240,8 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
         
         {isWaitingForFirstToken && (
           <div className="flex justify-start">
-            <div className="p-2 rounded-full bg-transparent backdrop-blur-sm border border-gray-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
-              <div className="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
+            <div className="p-3 rounded-full bg-transparent backdrop-blur-sm border border-gray-300 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
+              <PulseLoader color="#6B7280" size={8} speedMultiplier={0.8} margin={4} />
             </div>
           </div>
         )}
