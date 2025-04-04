@@ -33,9 +33,15 @@ export default function ChatConversation({ initialMessage, onClose }: ChatConver
         .replace(/<[^>]*>/g, '')
         .replace(/([a-z])([A-Z])/g, '$1 $2');
     } else {
+      // Remove leading spaces from each line before rendering markdown
+      const trimmedContent = content
+        .split('\n')
+        .map(line => line.trimStart())
+        .join('\n');
+        
       // For assistant messages, use React Markdown
       return <div className="prose prose-slate max-w-none">
-        <ReactMarkdown>{content}</ReactMarkdown>
+        <ReactMarkdown>{trimmedContent}</ReactMarkdown>
       </div>;
     }
   };
