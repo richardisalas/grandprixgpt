@@ -33,7 +33,7 @@ if (!process.env.GOOGLE_API_KEY) {
 const genAI = process.env.GOOGLE_API_KEY 
   ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
   : null;
-const geminiModel = genAI?.getGenerativeModel({ model: "gemini-2.5-pro-exp-03-25" });
+const geminiModel = genAI?.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // Initialize AstraDB client if credentials are available
 const client = ASTRA_DB_APPLICATION_TOKEN ? new DataAPIClient(ASTRA_DB_APPLICATION_TOKEN) : null
