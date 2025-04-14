@@ -48,14 +48,17 @@ export default function Home() {
         />
       )}
       
-      <div className="mt-10">
-        <Link 
-          href="/predictions" 
-          className="px-6 py-3 bg-transparent backdrop-blur-sm border border-gray-300 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-200 text-gray-600 text-lg font-bold"
-        >
-          Predictions
-        </Link>
-      </div>
+      {/* Only show predictions button when not in chat conversation mode */}
+      {initialMessage === null && (
+        <div className="mt-10">
+          <Link 
+            href="/predictions" 
+            className="px-6 py-3 bg-transparent backdrop-blur-sm border border-gray-300 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-200 text-gray-600 text-lg font-bold"
+          >
+            Predictions
+          </Link>
+        </div>
+      )}
     </main>
   )
 } 

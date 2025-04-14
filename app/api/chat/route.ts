@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { formatChatMessages } from '../../utils/apiUtils';
 
- import { DataAPIClient } from "@datastax/astra-db-ts"
+import { DataAPIClient } from "@datastax/astra-db-ts"
+
+// Model selection flag - set to 'openai' or 'gemini'
+const USE_MODEL: 'openai' | 'gemini' = 'gemini';
 
 // Environment variables
 const {
@@ -12,7 +16,7 @@ const {
   ASTRA_DB_APPLICATION_TOKEN,
 } = process.env
 
-// 2. Initialize OpenAI client
+// Initialize OpenAI client
 if (!process.env.OPENAI_API_KEY) {
   console.error('OPENAI_API_KEY environment variable not set.');
 }
@@ -20,6 +24,16 @@ if (!process.env.OPENAI_API_KEY) {
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Initialize Gemini client
+if (!process.env.GOOGLE_API_KEY) {
+  console.error('GOOGLE_API_KEY environment variable not set.');
+}
+
+const genAI = process.env.GOOGLE_API_KEY 
+  ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
+  : null;
+const geminiModel = genAI?.getGenerativeModel({ model: "gemini-2.5-pro-exp-03-25" });
 
 // Initialize AstraDB client if credentials are available
 const client = ASTRA_DB_APPLICATION_TOKEN ? new DataAPIClient(ASTRA_DB_APPLICATION_TOKEN) : null
@@ -121,47 +135,107 @@ export async function POST(request: Request) {
     const formattedMessages = formatChatMessages(messages);
     console.log('Formatted messages for OpenAI:', JSON.stringify(formattedMessages, null, 2));
 
-    // 4. Set up streaming response
+    // Set up encoding for streaming
     const encoder = new TextEncoder();
-    const stream = await openai.chat.completions.create({
-      model: "gpt-4o",
-      // messages: formattedMessages,
-      messages: [template, ...messages],
-      stream: true,
-      temperature: 0.7,
-      // reasoning_effort: "medium" 
-    });
 
-    // Create a ReadableStream to send the response in chunks
-    return new Response(
-      new ReadableStream({
-        async start(controller) {
-          try {
-            for await (const chunk of stream) {
-              const text = chunk.choices[0]?.delta?.content || "";
-              if (text) {
-                const sanitizedText = text
-                  .replace(/<[^>]*>/g, ''); // Remove HTML tags only
-                
-                controller.enqueue(encoder.encode(sanitizedText));
+    if (USE_MODEL === 'openai') {
+      // OpenAI streaming implementation
+      const stream = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [template, ...messages],
+        stream: true,
+        temperature: 0.7,
+      });
+
+      // Create a ReadableStream to send the response in chunks
+      return new Response(
+        new ReadableStream({
+          async start(controller) {
+            try {
+              for await (const chunk of stream) {
+                const text = chunk.choices[0]?.delta?.content || "";
+                if (text) {
+                  const sanitizedText = text
+                    .replace(/<[^>]*>/g, ''); // Remove HTML tags only
+                  
+                  controller.enqueue(encoder.encode(sanitizedText));
+                }
+              }
+            } catch (error) {
+              console.error("Stream processing error:", error);
+              controller.error(error);
+            } finally {
+              controller.close();
+            }
+          }
+        }),
+        {
+          headers: {
+            'Content-Type': 'text/markdown; charset=utf-8',
+            'Transfer-Encoding': 'chunked',
+          },
+        }
+      );
+    } else if (USE_MODEL === 'gemini' && geminiModel) {
+      // Gemini implementation
+      try {
+        // Format messages for Gemini (convert from OpenAI format)
+        const geminiMessages = messages.map((msg: { role: string; content: string }) => ({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.content }]
+        }));
+
+        // Add system prompt as a user message (Gemini doesn't support system role)
+        geminiMessages.unshift({
+          role: 'user',
+          parts: [{ text: template.content }]
+        });
+
+        // Start the chat
+        const chat = geminiModel.startChat({
+          history: geminiMessages.slice(0, -1), // Add all but last message to history
+        });
+
+        // Send the last message to get streaming response
+        const lastMsg = geminiMessages[geminiMessages.length - 1];
+        const result = await chat.sendMessageStream(lastMsg.parts[0].text);
+
+        // Stream the response
+        return new Response(
+          new ReadableStream({
+            async start(controller) {
+              try {
+                for await (const chunk of result.stream) {
+                  const text = chunk.text();
+                  if (text) {
+                    controller.enqueue(encoder.encode(text));
+                  }
+                }
+              } catch (error) {
+                console.error("Gemini stream processing error:", error);
+                controller.error(error);
+              } finally {
+                controller.close();
               }
             }
-          } catch (error) {
-            console.error("Stream processing error:", error);
-            controller.error(error);
-          } finally {
-            controller.close();
+          }),
+          {
+            headers: {
+              'Content-Type': 'text/markdown; charset=utf-8',
+              'Transfer-Encoding': 'chunked',
+            },
           }
-        }
-      }),
-      {
-        headers: {
-          'Content-Type': 'text/markdown; charset=utf-8',
-          'Transfer-Encoding': 'chunked',
-        },
+        );
+      } catch (error) {
+        console.error("Gemini API error:", error);
+        throw error;
       }
-    );
-
+    } else {
+      return NextResponse.json(
+        { error: 'Model configuration error' },
+        { status: 500 }
+      );
+    }
   } catch (error: any) {
     console.error('Chat API endpoint general error:', error);
     return NextResponse.json(
