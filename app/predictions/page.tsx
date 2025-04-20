@@ -69,6 +69,98 @@ const JapanGrandPrixPrediction = () => {
   )
 }
 
+// Saudi Arabian Grand Prix Prediction Component
+const SaudiArabianGrandPrixPrediction = () => {
+  return (
+    <div className="w-full max-w-3xl bg-transparent backdrop-blur-sm border border-gray-300 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)] mb-10">
+      <div className="p-6 border-b border-gray-200 text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Saudi Arabian Grand Prix Prediction</h2>
+        <p className="text-sm text-gray-500">Jeddah Corniche Circuit</p>
+      </div>
+      
+      <div className="p-6">
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Track Characteristics</h3>
+          <ul className="list-disc pl-5 space-y-1 text-gray-600">
+            <li>The Jeddah Corniche Circuit is a high-speed street circuit that presents unique challenges.</li>
+            <li>Overtaking is possible but can be difficult, making qualifying position crucial.</li>
+          </ul>
+        </div>
+        
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Qualifying Results</h3>
+          <ul className="list-disc pl-5 space-y-1 text-gray-600">
+            <li>Max Verstappen starts on pole position.</li>
+            <li>Oscar Piastri qualified P2.</li>
+            <li>George Russell starts P3.</li>
+            <li>Charles Leclerc rounds out the top four.</li>
+          </ul>
+        </div>
+        
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Car Performance in 2025</h3>
+          <ul className="list-disc pl-5 space-y-1 text-gray-600">
+            <li>Red Bull has shown strong performance, securing pole position.</li>
+            <li>McLaren is competitive, with Piastri starting in P2.</li>
+            <li>Mercedes and Ferrari are also in the mix, but slightly behind.</li>
+            <li>Williams looks to be lacking pace.</li>
+          </ul>
+        </div>
+        
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Team Performance in 2025 so far</h3>
+          <ul className="list-disc pl-5 space-y-1 text-gray-600">
+            <li>McLaren leads the constructor standings with 77 points.</li>
+            <li>Red Bull is in contention but needs to convert Verstappen's pole into a win.</li>
+            <li>Mercedes is showing potential but needs to improve its race pace.</li>
+            <li>Ferrari is slightly behind, needing to find more performance.</li>
+          </ul>
+        </div>
+        
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Driver Form and Historic Results</h3>
+          <ul className="list-disc pl-5 space-y-1 text-gray-600">
+            <li>Max Verstappen has won the Saudi Arabian Grand Prix twice (2022, 2024), demonstrating his ability at this track.</li>
+            <li>Other drivers like Leclerc and Perez have shown strong performances in the past.</li>
+          </ul>
+        </div>
+        
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Relevant Driver News and Team Chemistry</h3>
+          <ul className="list-disc pl-5 space-y-1 text-gray-600">
+            <li>Verstappen "has made it very clear that he's part of the team".</li>
+          </ul>
+        </div>
+        
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Conclusion</h3>
+          <p className="text-gray-600">
+            Considering Verstappen's pole position, his past success at this circuit, and Red Bull's overall performance, he is the favorite to win. Piastri's strong qualifying suggests McLaren will be highly competitive, and he could challenge for the win. Russell's starting position gives him a good chance to fight for a podium.
+          </p>
+        </div>
+        
+        <div className="bg-indigo-50/50 p-4 rounded-lg border border-indigo-100">
+          <h3 className="text-lg font-semibold text-gray-700 mb-3">Predicted Podium Finishes</h3>
+          <ol className="pl-5 space-y-2 text-gray-600">
+            <li className="flex items-center">
+              <span className="flex items-center justify-center w-6 h-6 mr-3 bg-yellow-400 rounded-full text-white font-bold">1</span>
+              <span className="font-medium">Max Verstappen (Red Bull)</span>
+            </li>
+            <li className="flex items-center">
+              <span className="flex items-center justify-center w-6 h-6 mr-3 bg-gray-300 rounded-full text-white font-bold">2</span>
+              <span className="font-medium">Oscar Piastri (McLaren)</span>
+            </li>
+            <li className="flex items-center">
+              <span className="flex items-center justify-center w-6 h-6 mr-3 bg-amber-600 rounded-full text-white font-bold">3</span>
+              <span className="font-medium">George Russell (Mercedes)</span>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Bahrain Grand Prix Prediction Component
 const BahrainGrandPrixPrediction = () => {
   return (
@@ -142,7 +234,7 @@ const BahrainGrandPrixPrediction = () => {
 
 export default function Predictions() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [selectedGP, setSelectedGP] = useState("Bahrain");
+  const [selectedGP, setSelectedGP] = useState("Saudi Arabia");
   
   const handleGPSelect = (gp: string) => {
     setSelectedGP(gp);
@@ -185,17 +277,28 @@ export default function Predictions() {
                 Japan GP
               </button>
               <button
-                className="text-left w-full px-4 py-2 hover:bg-indigo-50/50 rounded-b-lg text-gray-600"
+                className="text-left w-full px-4 py-2 hover:bg-indigo-50/50 text-gray-600"
                 onClick={() => handleGPSelect("Bahrain")}
               >
                 Bahrain GP
+              </button>
+              <button
+                className="text-left w-full px-4 py-2 hover:bg-indigo-50/50 rounded-b-lg text-gray-600"
+                onClick={() => handleGPSelect("Saudi Arabia")}
+              >
+                Saudi Arabia GP
               </button>
             </div>
           )}
         </div>
       </div>
       
-      {selectedGP === "Japan" ? <JapanGrandPrixPrediction /> : <BahrainGrandPrixPrediction />}
+      {selectedGP === "Japan" 
+        ? <JapanGrandPrixPrediction /> 
+        : selectedGP === "Saudi Arabia" 
+          ? <SaudiArabianGrandPrixPrediction />
+          : <BahrainGrandPrixPrediction />
+      }
     </main>
   )
 } 
